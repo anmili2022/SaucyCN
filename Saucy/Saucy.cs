@@ -23,7 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TriadBuddyPlugin;
 using static ECommons.GenericHelpers;
-using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Saucy;
 
@@ -237,7 +237,7 @@ public sealed class Saucy : IDalamudPlugin
     private int GetBonusMGP(int numMGP)
     {
         double multiplier = 1;
-        var localPlayer = Svc.ClientState.LocalPlayer;
+        var localPlayer = Svc.Objects.LocalPlayer;
         if (localPlayer is null)
         {
             return numMGP;

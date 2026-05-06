@@ -594,8 +594,7 @@ public unsafe class PluginUI : Window
             ImGui.Text($"{T("GateType", "GATE类型")}: {dir->GateType}");
             ImGui.Text($"{T("GatePositionType", "GATE位置类型")}: {dir->GatePositionType}");
             ImGui.Text($"{T("Flags", "标志位")}: {dir->Flags}");
-            ImGui.Text($"{T("IsRunningGate", "是否运行中")}: {dir->IsRunningGate()}");
-            ImGui.Text($"{T("IsAcceptingGate", "是否可进入")}: {dir->IsAcceptingGate()}");
+            ImGui.Text($"{T("GateFlags", "GATE标志位")}: {dir->Flags}");
         }
     }
 }
