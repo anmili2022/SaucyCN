@@ -4,7 +4,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Memory;
 using ECommons;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Saucy.OutOnALimb.ECEmbedded;
 
@@ -83,7 +83,7 @@ public abstract unsafe class AtkReader(AtkUnitBase* UnitBase, int BeginOffset = 
         {
             return null;
         }
-        if (!value.Type.EqualsAny(AtkValueType.String, AtkValueType.ManagedString)) throw new InvalidCastException($"Value {num} from Addon {UnitBase->NameString} was requested as SeString but it was {value.Type}");
+        if (!value.Type.EqualsAny(AtkValueType.String, AtkValueType.Managed)) throw new InvalidCastException($"Value {num} from Addon {UnitBase->NameString} was requested as SeString but it was {value.Type}");
         return MemoryHelper.ReadSeStringNullTerminated((nint)value.String.Value);
     }
 
@@ -96,7 +96,7 @@ public abstract unsafe class AtkReader(AtkUnitBase* UnitBase, int BeginOffset = 
         {
             return null;
         }
-        if (!value.Type.EqualsAny(AtkValueType.String, AtkValueType.ManagedString, AtkValueType.String8)) throw new InvalidCastException($"Value {num} from Addon {UnitBase->NameString} was requested as String but it was {value.Type}");
+        if (!value.Type.EqualsAny(AtkValueType.String, AtkValueType.Managed, AtkValueType.String8)) throw new InvalidCastException($"Value {num} from Addon {UnitBase->NameString} was requested as String but it was {value.Type}");
         return MemoryHelper.ReadStringNullTerminated((nint)value.String.Value);
     }
 

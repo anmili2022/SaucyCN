@@ -129,7 +129,7 @@ public unsafe class CufModule
 
     public static float GetTargetDistance(Dalamud.Game.ClientState.Objects.Types.IGameObject target)
     {
-        var LocalPlayer = Svc.ClientState.LocalPlayer;
+        var LocalPlayer = Svc.Objects.LocalPlayer;
 
         if (LocalPlayer is null)
             return 0;
