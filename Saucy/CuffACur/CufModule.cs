@@ -17,8 +17,6 @@ public unsafe class CufModule
 
     public delegate nint UnknownFunction(nint a1, ushort a2, int a3, void* a4);
     public static Hook<UnknownFunction> FuncHook;
-    private static bool ShotFired = false;
-
     public static nint FuncDetour(nint a1, ushort a2, int a3, void* a4)
     {
         return FuncHook.Original(a1, a2, a3, a4);
@@ -112,11 +110,10 @@ public unsafe class CufModule
 
             if (!Svc.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent] && !uiReaderGamesResults.HasResultsUI)
             {
-                var cuf = (GameObject*)Svc.Objects.Where(x => (x.DataId == 2005029 && GetTargetDistance(x) <= 1f) || (x.DataId == 197370 && GetTargetDistance(x) <= 4f)).OrderByDescending(GetTargetDistance).FirstOrDefault()?.Address;
+                var cuf = (GameObject*)Svc.Objects.Where(x => (x.BaseId == 2005029 && GetTargetDistance(x) <= 1f) || (x.BaseId == 197370 && GetTargetDistance(x) <= 4f)).OrderByDescending(GetTargetDistance).FirstOrDefault()?.Address;
                 if ((IntPtr)cuf == IntPtr.Zero)
                     return;
 
-                ShotFired = false;
                 var tg = TargetSystem.Instance();
                 tg->InteractWithObject(cuf);
             }
