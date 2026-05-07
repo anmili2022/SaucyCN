@@ -36,10 +36,49 @@ jobs:
         shell: pwsh
         run: |
           $dalamudRoot = Join-Path $env:RUNNER_TEMP "dalamud"
-          New-Item -ItemType Directory -Path $dalamudRoot | Out-Null
+          if (Test-Path $dalamudRoot) {
+            Remove-Item -LiteralPath $dalamudRoot -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $dalamudRoot | Out-Null
           $zipPath = Join-Path $dalamudRoot "dalamud.zip"
-          Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/goatcorp/dalamud-distrib/main/api15/latest.zip" -OutFile $zipPath
-          Expand-Archive -Path $zipPath -DestinationPath $dalamudRoot
+          $sources = @(
+            "https://goatcorp.github.io/dalamud-distrib/api15/latest.zip",
+            "https://raw.githubusercontent.com/goatcorp/dalamud-distrib/main/api15/latest.zip"
+          )
+
+          $downloaded = $false
+          foreach ($source in $sources) {
+            for ($attempt = 1; $attempt -le 3; $attempt++) {
+              try {
+                Invoke-WebRequest -UseBasicParsing $source -OutFile $zipPath
+                if ((Get-Item $zipPath).Length -le 0) {
+                  throw "Downloaded zip from $source is empty."
+                }
+
+                $downloaded = $true
+                break
+              } catch {
+                if (Test-Path $zipPath) {
+                  Remove-Item -LiteralPath $zipPath -Force
+                }
+                if ($attempt -eq 3) {
+                  Write-Warning "Failed to download Dalamud from $source after $attempt attempts: $($_.Exception.Message)"
+                } else {
+                  Start-Sleep -Seconds 2
+                }
+              }
+            }
+
+            if ($downloaded) {
+              break
+            }
+          }
+
+          if (-not $downloaded) {
+            throw "Unable to download Dalamud package from any configured source."
+          }
+
+          Expand-Archive -Path $zipPath -DestinationPath $dalamudRoot -Force
           $dll = Get-ChildItem -Path $dalamudRoot -Recurse -Filter Dalamud.dll | Select-Object -First 1
           if (-not $dll) { throw "Dalamud.dll not found in downloaded archive." }
           "DALAMUD_HOME=$($dll.Directory.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
