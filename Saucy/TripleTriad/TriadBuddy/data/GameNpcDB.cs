@@ -35,7 +35,7 @@ public class GameNpcDB
 
     public void Refresh()
     {
-        if (memReader != null && !memReader.HasErrors)
+        if (memReader != null && memReader.CanReadNpcProgress)
         {
             foreach (var kvp in mapNpcs)
             {

@@ -98,7 +98,7 @@ public class GameCardDB
     {
         ownedCardIds.Clear();
 
-        if (memReader == null || memReader.HasErrors || maxCardId <= 0)
+        if (memReader == null || !memReader.CanReadOwnedCards || maxCardId <= 0)
         {
             return;
         }

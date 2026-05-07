@@ -6,16 +6,17 @@ namespace TriadBuddyPlugin;
 
 public class UnsafeReaderTriadCards
 {
-    public bool HasErrors { get; private set; }
+    public bool HasErrors => !CanReadOwnedCards && !CanReadNpcProgress;
+    public bool CanReadNpcProgress => IsNpcBeatenFunc != null;
+    public unsafe bool CanReadOwnedCards => UIState.Instance() != null;
 
     private delegate byte IsNpcBeatenDelegate(IntPtr uiState, int triadNpcId);
 
     private readonly IsNpcBeatenDelegate? IsNpcBeatenFunc;
-    private readonly IntPtr UIStatePtr;
 
     public UnsafeReaderTriadCards()
     {
-        var IsNpcBeatenPtr = IntPtr.Zero;
+        var isNpcBeatenPtr = IntPtr.Zero;
         var sigScanner = Service.sigScanner;
 
         if (sigScanner != null)
@@ -26,10 +27,7 @@ public class UnsafeReaderTriadCards
                 //   identified by pretty unique rowId from TripleTriad sheet: 0x230002
                 //   looking for negative of that number (0xFFDCFFFE) gives pretty much only npc access functions (set + get)
 
-                IsNpcBeatenPtr = sigScanner.ScanText("E8 ?? ?? ?? ?? 84 C0 0F 94 C0 88 43 58 45 33 FF");
-
-                // UIState addr, use LEA opcode before calling IsTriadCardOwned, same function as described above
-                UIStatePtr = sigScanner.GetStaticAddressFromSig("E8 ?? ?? ?? ?? EB 35 8B FD");
+                isNpcBeatenPtr = sigScanner.ScanText("E8 ?? ?? ?? ?? 84 C0 0F 94 C0 88 43 58 45 33 FF");
             }
             catch (Exception ex)
             {
@@ -37,41 +35,42 @@ public class UnsafeReaderTriadCards
             }
         }
 
-        HasErrors = (IsNpcBeatenPtr == IntPtr.Zero) || (UIStatePtr == IntPtr.Zero);
-        if (!HasErrors)
+        if (isNpcBeatenPtr != IntPtr.Zero)
         {
-            IsNpcBeatenFunc = Marshal.GetDelegateForFunctionPointer<IsNpcBeatenDelegate>(IsNpcBeatenPtr);
+            IsNpcBeatenFunc = Marshal.GetDelegateForFunctionPointer<IsNpcBeatenDelegate>(isNpcBeatenPtr);
         }
         else
         {
-            Svc.Log.Error("Failed to find triad card functions, turning reader off");
+            Svc.Log.Warning("Failed to find triad NPC progress function, NPC completion tracking disabled");
         }
     }
 
     public unsafe bool IsCardOwned(int cardId)
     {
-        if (HasErrors || cardId <= 0 || cardId > 65535)
+        var uiState = UIState.Instance();
+        if (uiState == null || cardId <= 0 || cardId > 65535)
         {
             return false;
         }
 
-        return UIState.Instance()->IsTripleTriadCardUnlocked((ushort)cardId);
+        return uiState->IsTripleTriadCardUnlocked((ushort)cardId);
     }
 
-    public bool IsNpcBeaten(int npcId)
+    public unsafe bool IsNpcBeaten(int npcId)
     {
-        if (HasErrors || npcId < 0x230002)
+        var uiState = UIState.Instance();
+        if (IsNpcBeatenFunc == null || uiState == null || npcId < 0x230002)
         {
             return false;
         }
 
-        return (IsNpcBeatenFunc != null) && IsNpcBeatenFunc(UIStatePtr, npcId) != 0;
+        return IsNpcBeatenFunc((IntPtr)uiState, npcId) != 0;
     }
 
     /*public void TestBeatenNpcs()
     {
         // fixed addr from 5.58
-        IntPtr memAddr = UIStatePtr + 0x15d18;
+        IntPtr memAddr = (IntPtr)UIState.Instance() + 0x15d18;
 
         byte[] flags = Dalamud.Memory.MemoryHelper.ReadRaw(memAddr, 0x70 / 8);
         flags[10 / 8] |= 1 << (10 % 8);
@@ -84,7 +83,7 @@ public class UnsafeReaderTriadCards
     /*public void TestOwnedCardBits()
     {
         // fixed addr from 5.58
-        IntPtr memAddr = UIStatePtr + 0x15ce5;
+        IntPtr memAddr = (IntPtr)UIState.Instance() + 0x15ce5;
 
         byte[] flags = Dalamud.Memory.MemoryHelper.ReadRaw(memAddr, 0x29);
         flags[70 / 8] |= 1 << (70 % 8);

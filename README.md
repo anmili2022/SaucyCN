@@ -19,4 +19,14 @@ Automates certain Gold Saucer mini-games.
 
 Tracks Stats for Lifetime and Sessions and more!
 
+</ul>
+
+## Documentation
+
+- [2026-05-06 仓库交接](md/2026-05-06-SaucyCN-仓库交接.md)
+- [2026-05-06 Triad 读取修复交接](md/2026-05-06-SaucyCN-Triad读取修复交接.md)
+- [2026-05-04 API15 适配记录](md/2026-05-04-SaucyCN-API15适配记录.md)
+
+</div>
+
 <!-- Repository Header End -->
